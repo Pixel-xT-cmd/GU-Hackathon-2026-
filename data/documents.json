@@ -1,0 +1,17 @@
+[
+  {"id":"aadhaar","name_en":"Aadhaar card","name_hi":"आधार कार्ड","where_en":"Nearest Aadhaar centre","where_hi":"नज़दीकी आधार केंद्र"},
+  {"id":"aadhaar_linked_mobile","name_en":"Mobile number linked to Aadhaar","name_hi":"आधार से जुड़ा मोबाइल नंबर","where_en":"Aadhaar centre (update mobile number)","where_hi":"आधार केंद्र (मोबाइल नंबर अपडेट करें)"},
+  {"id":"bank_passbook_dbt","name_en":"Bank account linked for DBT (Aadhaar-seeded)","name_hi":"डीबीटी से जुड़ा बैंक खाता (आधार से लिंक)","where_en":"Your bank branch (ask for Aadhaar seeding)","where_hi":"अपनी बैंक शाखा (आधार सीडिंग के लिए कहें)"},
+  {"id":"income_certificate","name_en":"Income certificate","name_hi":"आय प्रमाण पत्र","where_en":"Tehsil office or state e-District portal","where_hi":"तहसील कार्यालय या राज्य ई-डिस्ट्रिक्ट पोर्टल"},
+  {"id":"caste_certificate","name_en":"Caste certificate","name_hi":"जाति प्रमाण पत्र","where_en":"Tehsil office or state e-District portal","where_hi":"तहसील कार्यालय या राज्य ई-डिस्ट्रिक्ट पोर्टल"},
+  {"id":"land_records","name_en":"Land ownership record","name_hi":"भूमि स्वामित्व रिकॉर्ड","where_en":"Local revenue / land records office","where_hi":"स्थानीय राजस्व / भूमि अभिलेख कार्यालय"},
+  {"id":"age_proof","name_en":"Age proof (birth or school certificate)","name_hi":"आयु प्रमाण (जन्म या स्कूल प्रमाण पत्र)","where_en":"Municipality or school records","where_hi":"नगरपालिका या स्कूल रिकॉर्ड"},
+  {"id":"bpl_card","name_en":"BPL or ration card","name_hi":"बीपीएल या राशन कार्ड","where_en":"Local ration / food department office","where_hi":"स्थानीय राशन / खाद्य विभाग कार्यालय"},
+  {"id":"bonafide_certificate","name_en":"Student bonafide / enrollment proof","name_hi":"छात्र नामांकन प्रमाण (बोनाफाइड)","where_en":"Your school or college office","where_hi":"अपने स्कूल या कॉलेज का कार्यालय"},
+  {"id":"previous_marksheet","name_en":"Previous year marksheet","name_hi":"पिछली कक्षा की अंकतालिका","where_en":"Your school or college","where_hi":"आपका स्कूल या कॉलेज"},
+  {"id":"domicile_certificate","name_en":"Domicile / Residence certificate","name_hi":"मूल निवास प्रमाण पत्र","where_en":"Tehsil office or state e-District portal","where_hi":"तहसील कार्यालय या राज्य ई-डिस्ट्रिक्ट पोर्टल"},
+  {"id":"disability_certificate","name_en":"Disability certificate (UDID card)","name_hi":"दिव्यांगता प्रमाण पत्र (यूडीआईडी कार्ड)","where_en":"District hospital or Swavlamban portal","where_hi":"जिला अस्पताल या स्वावलंबन पोर्टल"},
+  {"id":"maternity_discharge_anc","name_en":"Mother & Child Protection (MCP) card / ANC record","name_hi":"मातृ एवं शिशु सुरक्षा कार्ड (एमसीपी कार्ड)","where_en":"Nearest Anganwadi or Primary Health Centre (PHC)","where_hi":"निकटतम आंगनवाड़ी या प्राथमिक स्वास्थ्य केंद्र"},
+  {"id":"electricity_bill","name_en":"Electricity bill (consumer connection proof)","name_hi":"बिजली बिल (कनेक्शन प्रमाण)","where_en":"Electricity distribution office or online portal","where_hi":"विद्युत वितरण कार्यालय या ऑनलाइन पोर्टल"},
+  {"id":"ration_card","name_en":"Ration card","name_hi":"राशन कार्ड","where_en":"Local Food & Civil Supplies office or portal","where_hi":"स्थानीय खाद्य एवं नागरिक आपूर्ति कार्यालय या पोर्टल"}
+]
