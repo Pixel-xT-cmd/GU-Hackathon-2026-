@@ -2,6 +2,7 @@
 import os
 import json
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from typing import Optional
 from fastapi import Request, Response
 
 # Session signing key: read from SESSION_SECRET environment variable.
@@ -37,15 +38,24 @@ def get_session(request: Request) -> dict:
     except (BadSignature, SignatureExpired, Exception):
         return dict(DEFAULT_SESSION)
 
-def set_session(response: Response, data: dict):
+def set_session(response: Response, data: dict, request: Request = None):
     token = serializer.dumps(data)
+    secure = False
+    if request:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        secure = (proto == "https")
+    elif os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("HTTPS") == "on":
+        secure = True
+
     response.set_cookie(
         key=COOKIE_NAME,
         value=token,
         max_age=MAX_AGE,
         httponly=True,
-        samesite="lax"
+        samesite="lax",
+        path="/",
+        secure=secure
     )
 
 def clear_session(response: Response):
-    response.delete_cookie(key=COOKIE_NAME)
+    response.delete_cookie(key=COOKIE_NAME, path="/")
