@@ -107,60 +107,13 @@ async def index(request: Request):
 async def set_language(request: Request, lang: str = Form("en")):
     sess = get_session(request)
     sess["lang"] = "hi" if lang == "hi" else "en"
-    
-    # Return to the referring page or index
+
     referer = request.headers.get("referer", "/")
-    if "/checklist" in referer:
-        ctx = build_checklist_context(sess, sess["lang"])
-        response = templates.TemplateResponse(
-            request=request,
-            name="checklist.html",
-            context=ctx
-        )
-    elif "/results" in referer:
-        profile = sess.get("profile", {})
-        eligible_now, almost_eligible = match_schemes_for_profile(SCHEMES, profile, sess["lang"])
-        needed_docs = set()
-        for s in eligible_now + almost_eligible:
-            needed_docs.update(s.get("documents", []))
-        response = templates.TemplateResponse(
-            request=request,
-            name="results.html",
-            context={
-                "eligible_now": eligible_now,
-                "almost_eligible": almost_eligible,
-                "total_docs_needed": len(needed_docs),
-                "profile": profile,
-                "lang": sess["lang"],
-                "session": sess
-            }
-        )
-    elif "/wizard/step/" in referer:
-        # If in wizard, return current step template
-        try:
-            step = int(referer.split("/wizard/step/")[1].split("?")[0].split("/")[0])
-        except Exception:
-            step = 1
-        response = templates.TemplateResponse(
-            request=request,
-            name="wizard.html",
-            context={
-                "step": step,
-                "profile": sess.get("profile", {}),
-                "lang": sess["lang"],
-                "session": sess
-            }
-        )
+    if request.headers.get("HX-Request"):
+        response = Response(status_code=200, headers={"HX-Refresh": "true"})
     else:
-        response = templates.TemplateResponse(
-            request=request,
-            name="index.html",
-            context={
-                "lang": sess["lang"],
-                "session": sess
-            }
-        )
-    set_session(response, sess)
+        response = RedirectResponse(url=referer, status_code=303)
+    set_session(response, sess, request)
     return response
 
 @app.post("/load-persona")
@@ -171,7 +124,7 @@ async def load_persona(request: Request, persona_id: str = Form(...)):
     
     # Per requirement: Each persona must fill the whole profile and jump directly to the review step (Step 5)
     response = RedirectResponse(url="/wizard/step/5", status_code=303)
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 # Wizard Routes
@@ -234,7 +187,7 @@ async def post_wizard_step1(
     else:
         response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
         
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 @app.post("/wizard/step/2", response_class=HTMLResponse)
@@ -262,7 +215,7 @@ async def post_wizard_step2(
     else:
         response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
         
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 @app.post("/wizard/step/3", response_class=HTMLResponse)
@@ -290,7 +243,7 @@ async def post_wizard_step3(
     else:
         response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
         
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 @app.post("/wizard/step/4", response_class=HTMLResponse)
@@ -317,7 +270,7 @@ async def post_wizard_step4(
     else:
         response = RedirectResponse(url="/wizard/step/5", status_code=303)
         
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 @app.get("/results", response_class=HTMLResponse)
@@ -422,7 +375,7 @@ async def toggle_document(request: Request, doc_id: str = Form(...)):
     else:
         response = RedirectResponse(url="/checklist", status_code=303)
         
-    set_session(response, sess)
+    set_session(response, sess, request)
     return response
 
 if __name__ == "__main__":
