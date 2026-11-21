@@ -61,7 +61,7 @@ APP_ENV=development
 ```bash
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
-Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser.
+Open **[https://schemefinder-beige.vercel.app/](https://schemefinder-beige.vercel.app/)** in your browser.
 
 ---
 
