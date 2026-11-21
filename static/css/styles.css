@@ -1,0 +1,787 @@
+/* SchemeFinder: Civic Parchment & Forest Design System */
+
+/* --- LOCAL FONTS (Zero external CDN requests) --- */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/vendor/fonts/Fraunces-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/static/vendor/fonts/PlusJakartaSans-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/static/vendor/fonts/NotoSansDevanagari-Regular.ttf') format('truetype');
+}
+
+:root {
+  /* Dominant / Authoritative Dark */
+  --color-forest: #11302A;
+  --color-forest-dark: #0A1F1B;
+  --color-forest-soft: #1E4D44;
+
+  /* Parchment Neutrals */
+  --color-parchment: #F7F4EB;
+  --color-parchment-card: #FFFFFF;
+  --color-parchment-muted: #EFECE1;
+  --color-border: #D8D3C5;
+  --color-border-dark: #B5AD9B;
+
+  /* Ashoka Bronze / Ochre (Used ONLY for accents, progress bars, decorative stamps - NEVER body text) */
+  --color-accent: #C88A2C;
+  --color-accent-light: #FDF3E3;
+  --color-accent-dark: #9B651B;
+
+  /* Semantics */
+  --status-eligible-bg: #E8F5E9;
+  --status-eligible-text: #1B5E20;
+  --status-eligible-border: #4CAF50;
+
+  --status-almost-bg: #FFF8E1;
+  --status-almost-text: #B76E00;
+  --status-almost-border: #FFB300;
+
+  --status-missing-bg: #FFEBEE;
+  --status-missing-text: #B71C1C;
+  --status-missing-border: #E57373;
+
+  /* Typography Stacks */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-indic: 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Base Resets & Layout */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  background-color: var(--color-parchment);
+  color: var(--color-forest);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-parchment);
+  color: var(--color-forest);
+  font-family: var(--font-body);
+}
+
+/* Indic text selector */
+[lang="hi"], .lang-hi {
+  font-family: var(--font-indic) !important;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Header & Trust Bar */
+.civic-header {
+  background: var(--color-parchment-card);
+  border-bottom: 2px solid var(--color-border);
+  padding: 0.75rem 0;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand-emblem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--color-forest);
+}
+
+.brand-symbol {
+  width: 36px;
+  height: 36px;
+  background: var(--color-forest);
+  color: var(--color-parchment);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-forest-dark);
+}
+
+.brand-text h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-forest);
+  line-height: 1.1;
+}
+
+.brand-tagline {
+  font-size: 0.75rem;
+  color: var(--color-forest-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Privacy Assurance Pill */
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--color-parchment-muted);
+  border: 1px solid var(--color-border-dark);
+  color: var(--color-forest);
+  padding: 0.35rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Language Toggle Button */
+.lang-toggle-btn {
+  background: var(--color-forest);
+  color: var(--color-parchment);
+  border: 1px solid var(--color-forest-dark);
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+  min-height: 40px;
+}
+
+.lang-toggle-btn:hover {
+  background: var(--color-forest-dark);
+}
+
+/* Disclaimer Banner */
+.civic-disclaimer-banner {
+  background: #FFF8E1;
+  border-bottom: 1px solid var(--status-almost-border);
+  padding: 0.5rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #794A00;
+  font-weight: 500;
+}
+
+/* Passbook Card & Signature Elements */
+.passbook-card {
+  background: var(--color-parchment-card);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(17, 48, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+/* CSS-Only Perforated Passbook Divider */
+.passbook-edge {
+  position: relative;
+  height: 20px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.passbook-edge::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--color-border) 0px,
+    var(--color-border) 8px,
+    transparent 8px,
+    transparent 14px
+  );
+}
+
+.passbook-edge::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-parchment);
+  border-right: 2px solid var(--color-border);
+}
+
+/* CSS-Only Eligibility Rubber Stamp */
+.civic-stamp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px double var(--status-eligible-text);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  color: var(--status-eligible-text);
+  background: rgba(232, 245, 233, 0.7);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-5deg);
+  box-shadow: 0 1px 3px rgba(27, 94, 32, 0.15);
+  user-select: none;
+}
+
+.civic-stamp-almost {
+  border-color: var(--status-almost-text);
+  color: var(--status-almost-text);
+  background: rgba(255, 248, 225, 0.8);
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 3rem 0 2rem;
+  text-align: center;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  line-height: 1.15;
+  color: var(--color-forest);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--color-forest-soft);
+  max-width: 650px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.45;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Primary Button (Always Forest, NEVER low-contrast gold) */
+.btn-primary {
+  background: var(--color-forest);
+  color: var(--color-parchment);
+  border: 2px solid var(--color-forest-dark);
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.85rem 1.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  box-shadow: 0 3px 6px rgba(17, 48, 42, 0.15);
+  transition: transform 0.1s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+  background: var(--color-forest-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(17, 48, 42, 0.2);
+}
+
+.btn-secondary {
+  background: var(--color-parchment-card);
+  color: var(--color-forest);
+  border: 2px solid var(--color-border-dark);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.85rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  transition: background-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--color-parchment-muted);
+}
+
+/* Demo Presets Row */
+.presets-card {
+  margin: 2rem 0;
+  padding: 1.25rem;
+  background: var(--color-parchment-muted);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.presets-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-forest-soft);
+  margin-bottom: 0.75rem;
+}
+
+.preset-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.preset-btn {
+  background: var(--color-parchment-card);
+  border: 1.5px solid var(--color-border-dark);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-forest);
+  transition: all 0.15s ease;
+  min-height: 56px;
+}
+
+.preset-btn:hover {
+  border-color: var(--color-forest);
+  background: #FFF;
+  box-shadow: 0 2px 6px rgba(17, 48, 42, 0.08);
+}
+
+.preset-role {
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: block;
+}
+
+.preset-desc {
+  font-size: 0.8rem;
+  color: #4A5568;
+}
+
+/* Form & Wizard Components */
+.wizard-step-container {
+  padding: 1.5rem;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.step-pill {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  background: var(--color-parchment-muted);
+  color: var(--color-forest-soft);
+  border: 1px solid var(--color-border);
+}
+
+.step-pill.active {
+  background: var(--color-forest);
+  color: var(--color-parchment);
+  border-color: var(--color-forest-dark);
+}
+
+/* Interactive Option Tiles (Large touch surfaces) */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.option-tile {
+  background: var(--color-parchment-card);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 64px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.option-tile:hover {
+  border-color: var(--color-forest-soft);
+  background: #FCFBF7;
+}
+
+.option-tile input[type="radio"],
+.option-tile input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.option-tile.selected {
+  border-color: var(--color-forest);
+  background: #F3F8F5;
+  box-shadow: 0 0 0 1px var(--color-forest);
+}
+
+.tile-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-forest);
+}
+
+.tile-sub {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 0.2rem;
+}
+
+/* Document Checklist & Live Progress Bar */
+.readiness-meter {
+  background: var(--color-parchment-muted);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.meter-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.meter-percent {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-forest);
+}
+
+.progress-track {
+  width: 100%;
+  height: 16px;
+  background: #E2DDD0;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-accent); /* Bronze accent progress bar per rules */
+  border-radius: 8px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress-fill.complete {
+  background: var(--status-eligible-border);
+}
+
+/* Document Checklist Tile */
+.doc-tile {
+  background: var(--color-parchment-card);
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  cursor: pointer;
+}
+
+.doc-tile.owned {
+  border-color: var(--status-eligible-border);
+  background: #F8FBF8;
+}
+
+.doc-checkbox {
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  accent-color: var(--color-forest);
+  cursor: pointer;
+}
+
+.doc-info {
+  flex: 1;
+}
+
+.doc-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-forest);
+}
+
+.doc-where {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+.doc-alert-missing {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--status-missing-text);
+  background: var(--status-missing-bg);
+  border: 1px solid var(--status-missing-border);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Scheme Card */
+.scheme-card {
+  background: var(--color-parchment-card);
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  transition: box-shadow 0.15s ease;
+}
+
+.scheme-card:hover {
+  box-shadow: 0 4px 16px rgba(17, 48, 42, 0.08);
+}
+
+.scheme-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.scheme-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--color-forest);
+  line-height: 1.25;
+}
+
+.scheme-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--color-parchment-muted);
+  color: var(--color-forest);
+  border: 1px solid var(--color-border);
+}
+
+.scheme-bullets {
+  list-style: none;
+  margin-bottom: 1rem;
+}
+
+.scheme-bullet {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+}
+
+.scheme-bullet::before {
+  content: "•";
+  position: absolute;
+  left: 0.25rem;
+  color: var(--color-accent-dark);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.bullet-label {
+  font-weight: 700;
+  color: var(--color-forest);
+}
+
+.apply-notice {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+/* Footer */
+.civic-footer {
+  margin-top: auto;
+  background: var(--color-forest-dark);
+  color: var(--color-parchment);
+  padding: 2rem 0 1.5rem;
+  font-size: 0.85rem;
+  border-top: 3px solid var(--color-accent-dark);
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.footer-disclaimer {
+  color: #D1D5DB;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.4;
+}
+
+.footer-meta {
+  color: #9CA3AF;
+  font-size: 0.75rem;
+}
+
+/* HTMX Transitions */
+.htmx-swapping {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.htmx-settling {
+  opacity: 1;
+  transition: opacity 0.2s ease-in;
+}
+
+/* @media print for 1-Page Printable Checklist (NO PDF LIBRARY) */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+    font-size: 9.5pt !important;
+    line-height: 1.3 !important;
+  }
+  .civic-header, .civic-footer, .civic-disclaimer-banner, .btn-primary, .btn-secondary, .lang-toggle-btn, .presets-card, .no-print {
+    display: none !important;
+  }
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .passbook-card, .scheme-card, .readiness-meter {
+    border: 1px solid #333 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 8pt !important;
+    padding: 8pt !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .screen-only {
+    display: none !important;
+  }
+  .print-box {
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid #000;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+    text-align: center;
+    line-height: 12px;
+    font-weight: bold;
+    font-size: 10pt;
+  }
+}
+.print-only {
+  display: none;
+}
+
+/* Mobile 390px Adjustments */
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 1.85rem;
+  }
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .option-grid {
+    grid-template-columns: 1fr;
+  }
+  .preset-pills {
+    grid-template-columns: 1fr;
+  }
+}
