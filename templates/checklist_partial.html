@@ -1,0 +1,153 @@
+<!-- Live Application Readiness Meter -->
+<div class="readiness-meter passbook-card" id="readiness-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+  <div class="meter-header">
+    <div>
+      <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-forest-soft); text-transform: uppercase; letter-spacing: 0.05em;">
+        {% if lang == 'hi' %}दस्तावेज़ तत्परता स्तर{% else %}Document Readiness Score{% endif %}
+      </div>
+      <h3 style="font-family: var(--font-display); font-size: 1.6rem; color: var(--color-forest); margin-top: 0.2rem;">
+        {% if lang == 'hi' %}
+          आवेदन तत्परता: {{ readiness_pct }}%
+        {% else %}
+          Application Readiness: {{ readiness_pct }}%
+        {% endif %}
+      </h3>
+      <div style="font-size: 0.85rem; color: #555;">
+        {% if lang == 'hi' %}
+          {{ owned_count }} / {{ total_needed }} आवश्यक दस्तावेज़ आपके पास मौजूद हैं
+        {% else %}
+          You own {{ owned_count }} of {{ total_needed }} required documents
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="meter-percent" id="readiness-number">{{ readiness_pct }}%</div>
+  </div>
+
+  <!-- Progress Bar Track -->
+  <div class="progress-track" style="margin: 0.75rem 0;">
+    <div class="progress-fill {% if readiness_pct == 100 %}complete{% endif %}" id="readiness-bar-fill"
+         style="width: {{ readiness_pct }}%;"></div>
+  </div>
+
+  <!-- Readiness Status Text -->
+  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem;">
+    {% if readiness_pct == 100 %}
+      <span style="color: var(--status-eligible-text); display: flex; align-items: center; gap: 0.35rem;">
+        ✓ {% if lang == 'hi' %}100% तैयार! आपके पास आवेदन हेतु सभी आवश्यक दस्तावेज़ हैं।{% else %}100% Application Ready! You have all required paperwork.{% endif %}
+      </span>
+    {% elif readiness_pct >= 50 %}:
+      <span style="color: var(--status-almost-text); display: flex; align-items: center; gap: 0.35rem;">
+        ⚠️ {% if lang == 'hi' %}आंशिक तत्परता — नीचे दिए गए शेष दस्तावेज़ एकत्र करें।{% else %}Partially Ready — obtain remaining documents below before applying.{% endif %}
+      </span>
+    {% else %}
+      <span style="color: var(--status-missing-text); display: flex; align-items: center; gap: 0.35rem;">
+        ❗ {% if lang == 'hi' %}महत्वपूर्ण दस्तावेज़ शेष हैं — नजदीकी केंद्र या तहसील से बनवाएं।{% else %}Action Needed — crucial paperwork missing before kiosk visit.{% endif %}
+      </span>
+    {% endif %}
+
+    <span style="color: #666; font-size: 0.75rem;">
+      {% if lang == 'hi' %}सत्र में सुरक्षित{% else %}Session Only{% endif %}
+    </span>
+  </div>
+</div>
+
+<!-- Scheme Filter Dropdown if Multiple Schemes -->
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+  <div>
+    <label for="scheme-filter" style="font-size: 0.9rem; font-weight: 700; color: var(--color-forest);">
+      {% if lang == 'hi' %}योजना अनुसार फ़िल्टर करें:{% else %}Filter by Scheme:{% endif %}
+    </label>
+    <select id="scheme-filter" onchange="filterChecklistByScheme(this.value)"
+            style="padding: 0.4rem 0.75rem; border-radius: 6px; border: 1.5px solid var(--color-border-dark); font-size: 0.9rem; font-weight: 600; background: #FFF; color: var(--color-forest); margin-left: 0.5rem;">
+      <option value="all">{% if lang == 'hi' %}सभी पात्र योजनाएं (समग्र सूची){% else %}All Matched Schemes (Consolidated){% endif %}</option>
+      {% for s in matched_schemes %}
+      <option value="{{ s.id }}" {% if selected_scheme_id == s.id %}selected{% endif %}>
+        {{ s.name_hi if lang == 'hi' else s.name }} ({{ s.documents|length }} docs)
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Print 1-Page Checklist Button -->
+  <button type="button" class="btn-secondary" onclick="window.print()" style="min-height: 42px; padding: 0.4rem 1rem; font-size: 0.9rem;">
+    🖨️ {% if lang == 'hi' %}1-पेज चेकलिस्ट प्रिंट करें{% else %}Print 1-Page Checklist{% endif %}
+  </button>
+</div>
+
+<!-- Checklist Items -->
+<div class="checklist-items">
+  {% for doc in documents_list %}
+  {% set is_owned = doc.id in owned_docs %}
+  <div class="doc-tile {% if is_owned %}owned{% endif %}" id="doc-row-{{ doc.id }}"
+       data-schemes="{{ doc.scheme_ids | join(',') }}"
+       hx-post="/checklist/toggle-doc"
+       hx-vals='{"doc_id": "{{ doc.id }}"}'
+       hx-target="#checklist-container"
+       hx-swap="innerHTML">
+    
+    <input type="checkbox" class="doc-checkbox" {% if is_owned %}checked{% endif %}
+           onclick="event.stopPropagation();"
+           hx-post="/checklist/toggle-doc"
+           hx-vals='{"doc_id": "{{ doc.id }}"}'
+           hx-target="#checklist-container"
+           hx-swap="innerHTML">
+
+    <div class="doc-info">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="doc-name">
+          {{ doc.name_hi if lang == 'hi' else doc.name_en }}
+        </span>
+        <span style="font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.45rem; border-radius: 4px; background: {% if is_owned %}#E8F5E9; color: #1B5E20;{% else %}#FFEBEE; color: #B71C1C;{% endif %}">
+          {% if is_owned %}
+            ✓ {% if lang == 'hi' %}मौजूद है{% else %}Owned{% endif %}
+          {% else %}
+            ✕ {% if lang == 'hi' %}अनुपलब्ध / प्राप्त करना है{% else %}Missing / Needed{% endif %}
+          {% endif %}
+        </span>
+      </div>
+
+      <!-- Schemes requiring this doc -->
+      <div style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+        {% if lang == 'hi' %}आवश्यक योजनाएं:{% else %}Required by:{% endif %}
+        {% for s_name in doc.scheme_names %}
+          <span class="badge" style="font-size: 0.7rem; margin-right: 0.25rem;">{{ s_name }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Missing Document Alert with "Where to Get It" -->
+      {% if not is_owned %}
+      <div class="doc-alert-missing" style="margin-top: 0.5rem; display: flex; align-items: flex-start; gap: 0.4rem;">
+        <span style="font-size: 0.95rem;">📍</span>
+        <div>
+          <strong>{% if lang == 'hi' %}कहाँ से प्राप्त करें:{% else %}Where to get it:{% endif %}</strong>
+          {{ doc.where_hi if lang == 'hi' else doc.where_en }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- GSAP Readiness Bar Motion -->
+<script>
+  if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    gsap.fromTo('#readiness-bar-fill', 
+      { width: '0%' },
+      { width: '{{ readiness_pct }}%', duration: 0.65, ease: 'power2.out' }
+    );
+  }
+
+  function filterChecklistByScheme(schemeId) {
+    const rows = document.querySelectorAll('.doc-tile');
+    rows.forEach(row => {
+      const schemes = row.getAttribute('data-schemes').split(',');
+      if (schemeId === 'all' || schemes.includes(schemeId)) {
+        row.style.display = 'flex';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>

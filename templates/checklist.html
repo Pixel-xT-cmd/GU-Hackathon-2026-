@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 880px; margin: 0 auto;">
+
+  <!-- Screen Only: Top Navigation Bar -->
+  <div class="screen-only" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <a href="/results" class="btn-secondary" style="min-height: 42px; padding: 0.4rem 1rem;">
+      ← {% if lang == 'hi' %}पात्र योजनाएं देखें{% else %}Back to Matched Schemes{% endif %}
+    </a>
+
+    <div style="font-size: 0.85rem; color: var(--color-forest-soft); font-weight: 600;">
+      {% if lang == 'hi' %}
+        🔒 सत्र में सुरक्षित • कोई डेटाबेस नहीं
+      {% else %}
+        🔒 In-Session Only • Zero Storage
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Screen Only: Interactive Checklist Container (Updated dynamically via HTMX) -->
+  <div id="checklist-container" class="screen-only">
+    {% include "checklist_partial.html" %}
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- PRINT ONLY: 1-Page Printable Checklist (@media print)      -->
+  <!-- ======================================================== -->
+  <div class="print-only" id="printable-checklist-sheet">
+    <!-- Header -->
+    <div style="border-bottom: 2pt solid #000; padding-bottom: 6pt; margin-bottom: 8pt; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <h1 style="font-size: 16pt; font-family: 'Fraunces', serif; font-weight: bold; margin: 0; line-height: 1.1;">
+          SchemeFinder — Citizen Document Readiness Checklist
+        </h1>
+        <div style="font-size: 8.5pt; color: #444; margin-top: 2pt;\">
+          Official Citizen Preparation Ledger • Self-Audit Before Portal / CSC Kiosk Application
+        </div>
+      </div>
+      <div style="text-align: right; font-size: 8pt;">
+        Print Date: <span id="print-sheet-date"></span><br>
+        <strong>Status: {{ readiness_pct }}% Ready ({{ owned_count }}/{{ total_needed }})</strong>
+      </div>
+    </div>
+
+    <!-- Mandatory Indicative Line (Prominent per specification) -->
+    <div style="background: #EEE; border: 1pt solid #888; padding: 4pt 8pt; margin-bottom: 8pt; font-size: 8.5pt; font-weight: bold; text-align: center;">
+      Indicative only. Confirm eligibility on the official portal.
+    </div>
+
+    <!-- Citizen Profile Snapshot -->
+    <div style="border: 1pt solid #BBB; padding: 6pt 8pt; margin-bottom: 8pt; font-size: 8.5pt; display: flex; justify-content: space-between; flex-wrap: wrap; background: #FAFAFA;">
+      <div><strong>Citizen Age:</strong> {{ profile.get('age', 35) }} yrs</div>
+      <div><strong>Gender:</strong> {{ profile.get('gender', 'female') | title }}</div>
+      <div><strong>State / Domicile:</strong> {{ profile.get('state', 'Uttar Pradesh') }}</div>
+      <div><strong>Occupation:</strong> {{ profile.get('occupation', 'farmer') | replace('_', ' ') | title }}</div>
+      <div><strong>Category:</strong> {{ profile.get('social_category', 'General') }}</div>
+    </div>
+
+    <!-- Matched Schemes Summary -->
+    <div style="margin-bottom: 8pt;">
+      <div style="font-size: 9pt; font-weight: bold; text-transform: uppercase; margin-bottom: 3pt; border-bottom: 1pt solid #DDD; padding-bottom: 2pt;">
+        Matched Welfare Schemes ({{ matched_schemes | length }})
+      </div>
+      <div style="font-size: 8.5pt; line-height: 1.4;">
+        {% for s in matched_schemes %}
+          <strong>• {{ s.name }}</strong> ({{ s.status }} - {{ s.match_score }}% Match){% if not loop.last %} | {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Required Documents Ledger with Checkboxes -->
+    <div style="margin-bottom: 8pt;">
+      <div style="font-size: 9pt; font-weight: bold; text-transform: uppercase; margin-bottom: 4pt; border-bottom: 1pt solid #DDD; padding-bottom: 2pt;">
+        Required Documents Verification Checklist ({{ documents_list | length }} Documents)
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+        <thead>
+          <tr style="border-bottom: 1pt solid #000; text-align: left; background: #EFEFEF;">
+            <th style="padding: 3pt 4pt; width: 32px;">Status</th>
+            <th style="padding: 3pt 6pt;">Document Name</th>
+            <th style="padding: 3pt 6pt;">Required For Schemes</th>
+            <th style="padding: 3pt 6pt;">Where to Get / Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in documents_list %}
+          {% set is_owned = doc.id in owned_docs %}
+          <tr style="border-bottom: 0.5pt solid #CCC; {% if is_owned %}background: #F9FFF9;{% endif %}">
+            <td style="padding: 3pt 4pt; text-align: center;">
+              <span class="print-box">{% if is_owned %}✓{% endif %}</span>
+            </td>
+            <td style="padding: 3pt 6pt; font-weight: bold;">
+              {{ doc.name_en }}
+              <div style="font-size: 7.5pt; color: #555; font-weight: normal;">{{ doc.name_hi }}</div>
+            </td>
+            <td style="padding: 3pt 6pt; font-size: 7.5pt; color: #333;">
+              {{ doc.scheme_names | join(', ') }}
+            </td>
+            <td style="padding: 3pt 6pt; font-size: 8pt;">
+              {% if is_owned %}
+                <span style="color: #2E7D32; font-weight: bold;">Ready in possession</span>
+              {% else %}
+                <span style="color: #C62828; font-weight: bold;">Missing:</span> {{ doc.where_en }}
+                <div style="font-size: 7pt; color: #666;">{{ doc.where_hi }}</div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Print Footer Note -->
+    <div style="border-top: 1pt solid #000; padding-top: 4pt; font-size: 7.5pt; display: flex; justify-content: space-between; color: #444;">
+      <div>SchemeFinder • Pure deterministic life-event matching • In-session privacy</div>
+      <div><strong>Indicative only. Confirm eligibility on the official portal.</strong></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('print-sheet-date').innerText = new Date().toLocaleDateString('en-IN');
+</script>
+{% endblock %}

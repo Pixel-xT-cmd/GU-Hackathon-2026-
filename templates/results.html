@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 880px; margin: 0 auto;">
+
+  <!-- Official Indicative Disclaimer Banner (prominent on results page) -->
+  <div style="background: #FFF8E1; border: 2px solid var(--status-almost-border); border-radius: 8px; padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.6rem;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B76E00" stroke-width="2.5" style="flex-shrink: 0;">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <div style="font-size: 0.9rem; color: #794A00; font-weight: 600;">
+        {% if lang == 'hi' %}
+          <strong>सांकेतिक सूचना:</strong> केवल सांकेतिक। आधिकारिक पोर्टल पर पात्रता की पुष्टि करें।
+        {% else %}
+          <strong>Notice:</strong> Indicative only. Confirm eligibility on the official portal.
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="font-size: 0.8rem; color: #666;">
+      {% if lang == 'hi' %}सत्र में सुरक्षित • कोई डेटाबेस नहीं{% else %}Session Only • Zero Database Storage{% endif %}
+    </div>
+  </div>
+
+  <!-- Results Summary Header Bar -->
+  <div class="passbook-card" style="padding: 1.5rem; margin-bottom: 2rem; background: var(--color-parchment-card);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-forest-soft); text-transform: uppercase; letter-spacing: 0.05em;">
+          {% if lang == 'hi' %}पात्रता विश्लेषण परिणाम{% else %}Eligibility Match Report{% endif %}
+        </div>
+        <h2 style="font-family: var(--font-display); font-size: 1.75rem; color: var(--color-forest); margin-top: 0.25rem;">
+          {% if lang == 'hi' %}
+            {{ eligible_now|length }} योजनाएं "पात्रता प्रमाणित" • {{ almost_eligible|length }} योजनाएं "लगभग पात्र"
+          {% else %}
+            {{ eligible_now|length }} Schemes "Eligible Now" • {{ almost_eligible|length }} "Almost Eligible"
+          {% endif %}
+        </h2>
+        <div style="font-size: 0.85rem; color: #555; margin-top: 0.25rem;">
+          {% if lang == 'hi' %}
+            प्रोफाइल: आयु {{ profile.get('age') }} • {{ profile.get('gender') }} • {{ profile.get('state') }} • {{ profile.get('occupation') | replace('_', ' ') | title }} • श्रेणी: {{ profile.get('social_category') }}
+          {% else %}
+            Profile: Age {{ profile.get('age') }} • {{ profile.get('gender') | title }} • {{ profile.get('state') }} • {{ profile.get('occupation') | replace('_', ' ') | title }} • {{ profile.get('social_category') }}
+          {% endif %}
+          (<a href="/wizard/step/5" style="color: var(--color-forest); font-weight: 600;">{% if lang == 'hi' %}बदलें{% else %}Edit Profile{% endif %}</a>)
+        </div>
+      </div>
+
+      <!-- Action Button to Checklist -->
+      <a href="/checklist" class="btn-primary" style="font-size: 1rem; padding: 0.75rem 1.25rem;">
+        {% if lang == 'hi' %}
+          दस्तावेज़ तत्परता चेकलिस्ट देखें →
+        {% else %}
+          Check Document Readiness ({{ total_docs_needed }} Docs) →
+        {% endif %}
+      </a>
+    </div>
+  </div>
+
+  <!-- SECTION 1: ELIGIBLE NOW -->
+  <div style="margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest);">
+          {% if lang == 'hi' %}1. अभी पात्र योजनाएं (Eligible Now){% else %}1. Eligible Now (All Criteria Met){% endif %}
+        </h3>
+        <span class="badge" style="background: var(--status-eligible-bg); color: var(--status-eligible-text); border-color: var(--status-eligible-border); font-size: 0.85rem;">
+          {{ eligible_now|length }}
+        </span>
+      </div>
+
+      <!-- Stamp Badge -->
+      <div class="civic-stamp" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+        <span>ELIGIBLE NOW</span>
+      </div>
+    </div>
+
+    {% if eligible_now|length == 0 %}
+      <div class="passbook-card" style="padding: 2rem; text-align: center; color: #666;">
+        {% if lang == 'hi' %}
+          वर्तमान प्रोफाइल के लिए कोई पूर्णतः पात्र योजना नहीं मिली। कृपया "लगभग पात्र" योजनाएं देखें या प्रोफाइल में सुधार करें।
+        {% else %}
+          No schemes fully met all hard and soft criteria for this profile. Please review the Almost Eligible schemes below or adjust profile parameters.
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="schemes-grid">
+        {% for s in eligible_now %}
+        <div class="scheme-card match-reveal-item" id="scheme-{{ s.id }}">
+          <div class="scheme-header">
+            <div>
+              <h4 class="scheme-title">
+                {{ s.name_hi if lang == 'hi' else s.name }}
+              </h4>
+              <div style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                {{ s.name if lang == 'hi' else s.name_hi }}
+              </div>
+            </div>
+
+            <!-- Match Score Pill -->
+            <div style="text-align: right;">
+              <span class="badge" style="background: var(--status-eligible-bg); color: var(--status-eligible-text); border: 1.5px solid var(--status-eligible-border); font-weight: 700;">
+                {{ s.match_score }}% Match
+              </span>
+            </div>
+          </div>
+
+          <!-- Category and Level Badges -->
+          <div class="scheme-badges">
+            <span class="badge">{{ s.level | upper }}</span>
+            {% if s.state != 'all' %}<span class="badge">{{ s.state }}</span>{% endif %}
+            <span class="badge">{{ s.category }}</span>
+            <span class="badge" style="background: #E8F5E9; color: #2E7D32;">✓ All Rules Passed</span>
+          </div>
+
+          <!-- 3 Bullets per Scheme Card -->
+          <ul class="scheme-bullets">
+            <!-- Bullet 1: Benefit -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}योजना लाभ:{% else %}Benefit:{% endif %}</span>
+              {{ s.benefit_hi if lang == 'hi' else s.benefit_en }}
+            </li>
+
+            <!-- Bullet 2: Why You Qualify -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}आप क्यों पात्र हैं:{% else %}Why You Qualify:{% endif %}</span>
+              {{ s.formatted_why_hi if lang == 'hi' else s.formatted_why_en }}
+            </li>
+
+            <!-- Bullet 3: Official Portal Apply Link -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}आधिकारिक आवेदन पोर्टल:{% else %}Official Portal:{% endif %}</span>
+              {% if s.apply_url_verified and s.apply_url %}
+                <a href="{{ s.apply_url }}" target="_blank" rel="noopener" style="color: var(--color-forest); font-weight: 600; text-decoration: underline;">
+                  {{ s.apply_url }} ↗
+                </a>
+              {% elif s.apply_url %}
+                <!-- Unverified URLs must be plain text with disclaimer -->
+                <span style="font-family: monospace; color: #444; background: #EEE; padding: 0.15rem 0.4rem; border-radius: 4px;">
+                  {{ s.apply_url }}
+                </span>
+                <span style="color: #666; font-size: 0.85rem; font-style: italic; margin-left: 0.35rem;">
+                  {% if lang == 'hi' %}(आधिकारिक पोर्टल पर पुष्टि करें - असत्यापित लिंक){% else %}(verify on the official portal - unverified URL){% endif %}
+                </span>
+              {% else %}
+                <span style="color: #666; font-style: italic;">
+                  {% if lang == 'hi' %}आधिकारिक पोर्टल का विवरण उपलब्ध नहीं है{% else %}Official portal link not specified{% endif %}
+                </span>
+              {% endif %}
+            </li>
+          </ul>
+
+          <!-- Documents Needed Preview -->
+          <div style="font-size: 0.8rem; color: #555; background: var(--color-parchment-muted); padding: 0.4rem 0.75rem; border-radius: 4px;">
+            <strong>{% if lang == 'hi' %}आवश्यक दस्तावेज़:{% else %}Documents Needed:{% endif %}</strong>
+            {{ s.documents | length }} {% if lang == 'hi' %}दस्तावेज़{% else %}documents{% endif %}
+            • <a href="/checklist" style="color: var(--color-forest); font-weight: 600;">{% if lang == 'hi' %}चेकलिस्ट में देखें{% else %}Tick in Checklist →{% endif %}</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="passbook-edge"></div>
+
+  <!-- SECTION 2: ALMOST ELIGIBLE -->
+  <div style="margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest);">
+          {% if lang == 'hi' %}2. लगभग पात्र योजनाएं (Almost Eligible){% else %}2. Almost Eligible (1 Soft Rule Missed){% endif %}
+        </h3>
+        <span class="badge" style="background: var(--status-almost-bg); color: var(--status-almost-text); border-color: var(--status-almost-border); font-size: 0.85rem;">
+          {{ almost_eligible|length }}
+        </span>
+      </div>
+
+      <!-- Stamp Badge -->
+      <div class="civic-stamp civic-stamp-almost" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+        <span>ALMOST ELIGIBLE</span>
+      </div>
+    </div>
+
+    <p style="font-size: 0.9rem; color: #555; margin-bottom: 1.25rem;">
+      {% if lang == 'hi' %}
+        इन योजनाओं के सभी अनिवार्य (Hard) नियम पूरे हैं, परंतु केवल एक पूरक (Soft) शर्त (जैसे आय सीमा या श्रेणी) थोड़ी भिन्न है।
+      {% else %}
+        These schemes satisfy all mandatory hard criteria, missing exactly one soft parameter (e.g. income bracket threshold).
+      {% endif %}
+    </p>
+
+    {% if almost_eligible|length == 0 %}
+      <div class="passbook-card" style="padding: 2rem; text-align: center; color: #666;">
+        {% if lang == 'hi' %}
+          कोई लगभग पात्र योजना नहीं है।
+        {% else %}
+          No almost eligible schemes found for this profile.
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="schemes-grid">
+        {% for s in almost_eligible %}
+        <div class="scheme-card match-reveal-item" id="scheme-{{ s.id }}" style="border-left: 5px solid var(--status-almost-border);">
+          <div class="scheme-header">
+            <div>
+              <h4 class="scheme-title">
+                {{ s.name_hi if lang == 'hi' else s.name }}
+              </h4>
+              <div style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                {{ s.name if lang == 'hi' else s.name_hi }}
+              </div>
+            </div>
+
+            <!-- Match Score Pill -->
+            <div style="text-align: right;">
+              <span class="badge" style="background: var(--status-almost-bg); color: var(--status-almost-text); border: 1.5px solid var(--status-almost-border); font-weight: 700;">
+                {{ s.match_score }}% Match
+              </span>
+            </div>
+          </div>
+
+          <!-- Explicit Callout for Missed Criterion -->
+          <div style="background: #FFF9E6; border: 1.5px solid #FFE082; border-radius: 6px; padding: 0.5rem 0.85rem; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">⚠️</span>
+            <div style="font-size: 0.85rem; color: #8D5400;">
+              {% if lang == 'hi' %}
+                <strong>छूटी हुई शर्त:</strong> {{ s.missed_criterion_hi }}
+              {% else %}
+                <strong>Missed Criterion:</strong> {{ s.missed_criterion_en }}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Category and Level Badges -->
+          <div class="scheme-badges">
+            <span class="badge">{{ s.level | upper }}</span>
+            {% if s.state != 'all' %}<span class="badge">{{ s.state }}</span>{% endif %}
+            <span class="badge">{{ s.category }}</span>
+            <span class="badge" style="background: #FFF8E1; color: #B76E00;">1 Soft Rule Gap</span>
+          </div>
+
+          <!-- 3 Bullets per Scheme Card -->
+          <ul class="scheme-bullets">
+            <!-- Bullet 1: Benefit -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}योजना लाभ:{% else %}Benefit:{% endif %}</span>
+              {{ s.benefit_hi if lang == 'hi' else s.benefit_en }}
+            </li>
+
+            <!-- Bullet 2: Why You Qualify -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}पात्रता विश्लेषण:{% else %}Why You Qualify:{% endif %}</span>
+              {{ s.formatted_why_hi if lang == 'hi' else s.formatted_why_en }}
+            </li>
+
+            <!-- Bullet 3: Official Portal Apply Link -->
+            <li class="scheme-bullet">
+              <span class="bullet-label">{% if lang == 'hi' %}आधिकारिक आवेदन पोर्टल:{% else %}Official Portal:{% endif %}</span>
+              {% if s.apply_url_verified and s.apply_url %}
+                <a href="{{ s.apply_url }}" target="_blank" rel="noopener" style="color: var(--color-forest); font-weight: 600; text-decoration: underline;">
+                  {{ s.apply_url }} ↗
+                </a>
+              {% elif s.apply_url %}
+                <span style="font-family: monospace; color: #444; background: #EEE; padding: 0.15rem 0.4rem; border-radius: 4px;">
+                  {{ s.apply_url }}
+                </span>
+                <span style="color: #666; font-size: 0.85rem; font-style: italic; margin-left: 0.35rem;">
+                  {% if lang == 'hi' %}(आधिकारिक पोर्टल पर पुष्टि करें - असत्यापित लिंक){% else %}(verify on the official portal - unverified URL){% endif %}
+                </span>
+              {% else %}
+                <span style="color: #666; font-style: italic;">
+                  {% if lang == 'hi' %}आधिकारिक पोर्टल का विवरण उपलब्ध नहीं है{% else %}Official portal link not specified{% endif %}
+                </span>
+              {% endif %}
+            </li>
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Bottom CTA: Proceed to Checklist -->
+  <div class="passbook-card" style="padding: 1.5rem; text-align: center; margin-top: 2rem;">
+    <h3 style="font-family: var(--font-display); font-size: 1.4rem; color: var(--color-forest); margin-bottom: 0.5rem;">
+      {% if lang == 'hi' %}आवेदन से पहले अपने दस्तावेज़ तैयार करें{% else %}Get Your Documents Ready Before Applying{% endif %}
+    </h3>
+    <p style="font-size: 0.95rem; color: var(--color-forest-soft); max-width: 600px; margin: 0 auto 1.25rem;">
+      {% if lang == 'hi' %}
+        इंटरैक्टिव चेकलिस्ट में अपने पास मौजूद दस्तावेज़ों पर टिक करें। देखें कि आप कितने प्रतिशत तैयार हैं और शेष दस्तावेज़ कहां से प्राप्त करें।
+      {% else %}
+        Tick documents you already own to see your live Application Readiness % and get exact Tehsildar / CSC guidance for missing ones.
+      {% endif %}
+    </p>
+    <a href="/checklist" class="btn-primary" style="font-size: 1.1rem; padding: 0.85rem 2rem;">
+      {% if lang == 'hi' %}
+        दस्तावेज़ तत्परता चेकलिस्ट खोलें (चेक करें) →
+      {% else %}
+        Open Interactive Document Checklist →
+      {% endif %}
+    </a>
+  </div>
+
+</div>
+
+<!-- GSAP Match Reveal Animation (Tasteful, Short, Respects Reduced Motion) -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.from('.match-reveal-item', {
+        opacity: 0,
+        y: 18,
+        duration: 0.5,
+        stagger: 0.07,
+        ease: 'power2.out'
+      });
+      gsap.from('.civic-stamp', {
+        scale: 0.85,
+        opacity: 0,
+        duration: 0.4,
+        delay: 0.2,
+        ease: 'back.out(1.5)'
+      });
+    }
+  });
+</script>
+{% endblock %}
