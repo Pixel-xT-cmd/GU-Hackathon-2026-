@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="main-content">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="passbook-card" style="padding: 2.5rem 1.5rem; max-width: 820px; margin: 0 auto; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span class="badge" style="background: var(--color-forest); color: var(--color-parchment); margin-bottom: 0.75rem;">
+            {% if lang == 'hi' %}60-सेकंड पात्रता इंजन{% else %}60-Second Eligibility Engine{% endif %}
+          </span>
+          <h2 class="hero-title" style="margin-bottom: 0.5rem;">
+            {% if lang == 'hi' %}
+              सरकारी योजनाओं की पात्रता और दस्तावेज़ तत्परता जांचें
+            {% else %}
+              Civic Welfare Entitlement & Document Readiness
+            {% endif %}
+          </h2>
+          <p class="hero-subtitle" style="margin: 0; max-width: 580px;">
+            {% if lang == 'hi' %}
+              नियम-आधारित निष्पक्ष मिलान। जानें कि आप किन योजनाओं के लिए पात्र हैं और आवेदन करने से पहले कौन-से दस्तावेज़ तैयार रखने हैं।
+            {% else %}
+              Deterministic, transparent rule matching. Discover schemes you qualify for and flag missing paperwork with a 1-page readiness checklist before you visit a kiosk or portal.
+            {% endif %}
+          </p>
+        </div>
+
+        <!-- CSS Stamp Signature Element -->
+        <div class="civic-stamp">
+          <span>ELIGIBILITY VERIFIED</span>
+          <span style="font-size: 0.65rem; opacity: 0.85;">DETERMINISTIC RULES</span>
+        </div>
+      </div>
+
+      <div class="passbook-edge"></div>
+
+      <!-- Action Area -->
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem;">
+        <div>
+          <div style="font-size: 0.85rem; color: var(--color-forest-soft); font-weight: 600;">
+            {% if lang == 'hi' %}
+              ✓ बिना किसी लॉगिन के • ✓ कोई डेटाबेस नहीं • ✓ 100% निजी व सुरक्षित
+            {% else %}
+              ✓ Zero Login Required • ✓ No Database Storage • ✓ 100% In-Session Privacy
+            {% endif %}
+          </div>
+        </div>
+
+        <a href="/wizard/step/1" class="btn-primary" id="start-wizard-btn">
+          <span>
+            {% if lang == 'hi' %}
+              पात्रता जांच शुरू करें (चरण 1/5) →
+            {% else %}
+              Start 60-Second Check (Step 1/5) →
+            {% endif %}
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 One-Click Demo Presets for Judges & Testing -->
+  <section class="presets-card" style="max-width: 820px; margin: 1.5rem auto;">
+    <div class="presets-title">
+      {% if lang == 'hi' %}
+        त्वरित डेमो प्रोफाइल (1-क्लिक परीक्षण)
+      {% else %}
+        Instant Demo Personas (1-Click Judge Walkthrough)
+      {% endif %}
+    </div>
+
+    <div class="preset-pills">
+      <!-- Persona 1 -->
+      <form action="/load-persona" method="post" style="display: contents;">
+        <input type="hidden" name="persona_id" value="p1_farmer">
+        <button type="submit" class="preset-btn" title="Click to test Persona 1">
+          <span class="preset-role">👩🌾 1. {% if lang == 'hi' %}ग्रामीण महिला किसान (उम्र 35){% else %}Rural Female Farmer (Age 35){% endif %}</span>
+          <span class="preset-desc">
+            {% if lang == 'hi' %}
+              B2 आय (₹1-2.5L) • पात्र: PM-KISAN, अटल पेंशन
+            {% else %}
+              B2 Income (Rs 1-2.5L) • Target: PM-KISAN, APY
+            {% endif %}
+          </span>
+        </button>
+      </form>
+
+      <!-- Persona 2 -->
+      <form action="/load-persona" method="post" style="display: contents;">
+        <input type="hidden" name="persona_id" value="p2_student">
+        <button type="submit" class="preset-btn" title="Click to test Persona 2">
+          <span class="preset-role">🎓 2. {% if lang == 'hi' %}कॉलेज छात्र, SC श्रेणी (उम्र 20){% else %}College Student, SC (Age 20){% endif %}</span>
+          <span class="preset-desc">
+            {% if lang == 'hi' %}
+              B3 आय (₹2.5-5L) • लगभग पात्र: पोस्ट-मैट्रिक (आय सीमा)
+            {% else %}
+              B3 Income (Rs 2.5-5L) • Almost: Post-Matric (Income)
+            {% endif %}
+          </span>
+        </button>
+      </form>
+
+      <!-- Persona 3 -->
+      <form action="/load-persona" method="post" style="display: contents;">
+        <input type="hidden" name="persona_id" value="p3_senior">
+        <button type="submit" class="preset-btn" title="Click to test Persona 3">
+          <span class="preset-role">👴 3. {% if lang == 'hi' %}वरिष्ठ नागरिक (उम्र 72){% else %}Senior Citizen (Age 72){% endif %}</span>
+          <span class="preset-desc">
+            {% if lang == 'hi' %}
+              B1 आय (<₹1L) • पात्र: आयुष्मान वय वंदना, वृद्धावस्था पेंशन
+            {% else %}
+              B1 Income (<Rs 1L) • Target: Vay Vandana, IGNOAPS
+            {% endif %}
+          </span>
+        </button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}
