@@ -20,11 +20,20 @@ with open(DATA_DIR / "documents.json", "r", encoding="utf-8") as f:
 DOCS_BY_ID = {d["id"]: d for d in DOCUMENTS}
 
 schemes_file = DATA_DIR / "schemes.json"
-if not schemes_file.exists():
-    schemes_file = DATA_DIR / "schemes.seed.json"
-
-with open(schemes_file, "r", encoding="utf-8") as f:
-    SCHEMES = json.load(f)
+if schemes_file.exists():
+    with open(schemes_file, "r", encoding="utf-8") as f:
+        SCHEMES = json.load(f)
+elif (DATA_DIR / "schemes_central.json").exists() and (DATA_DIR / "schemes_state.json").exists():
+    with open(DATA_DIR / "schemes_central.json", "r", encoding="utf-8") as f:
+        c = json.load(f)
+    with open(DATA_DIR / "schemes_state.json", "r", encoding="utf-8") as f:
+        s = json.load(f)
+    SCHEMES = c + s
+    with open(schemes_file, "w", encoding="utf-8") as f:
+        json.dump(SCHEMES, f, ensure_ascii=False, indent=2)
+else:
+    with open(DATA_DIR / "schemes.seed.json", "r", encoding="utf-8") as f:
+        SCHEMES = json.load(f)
 
 app = FastAPI(
     title="SchemeFinder",
@@ -102,253 +111,297 @@ async def set_language(request: Request, lang: str = Form("en")):
     # Return to the referring page or index
     referer = request.headers.get("referer", "/")
     if "/checklist" in referer:
-        response = RedirectResponse(url="/checklist", status_code=303)
+        ctx = build_checklist_context(sess, sess["lang"])
+        response = templates.TemplateResponse(
+            request=request,
+            name="checklist.html",
+            context=ctx
+        )
     elif "/results" in referer:
-        response = RedirectResponse(url="/results", status_code=303)
-    elif "/wizard" in referer:
-        response = RedirectResponse(url="/wizard", status_code=303)
+        profile = sess.get("profile", {})
+        eligible_now, almost_eligible = match_schemes_for_profile(SCHEMES, profile, sess["lang"])
+        needed_docs = set()
+        for s in eligible_now + almost_eligible:
+            needed_docs.update(s.get("documents", []))
+        response = templates.TemplateResponse(
+            request=request,
+            name="results.html",
+            context={
+                "eligible_now": eligible_now,
+                "almost_eligible": almost_eligible,
+                "total_docs_needed": len(needed_docs),
+                "profile": profile,
+                "lang": sess["lang"],
+                "session": sess
+            }
+        )
+    elif "/wizard/step/" in referer:
+        # If in wizard, return current step template
+        try:
+            step = int(referer.split("/wizard/step/")[1].split("?")[0].split("/")[0])
+        except Exception:
+            step = 1
+        response = templates.TemplateResponse(
+            request=request,
+            name="wizard.html",
+            context={
+                "step": step,
+                "profile": sess.get("profile", {}),
+                "lang": sess["lang"],
+                "session": sess
+            }
+        )
     else:
-        response = RedirectResponse(url="/", status_code=303)
+        response = templates.TemplateResponse(
+            request=request,
+            name="index.html",
+            context={
+                "lang": sess["lang"],
+                "session": sess
+            }
+        )
     set_session(response, sess)
     return response
 
 @app.post("/load-persona")
 async def load_persona(request: Request, persona_id: str = Form(...)):
-    if persona_id not in DEMO_PERSONAS:
-        return RedirectResponse(url="/", status_code=303)
-    
     sess = get_session(request)
-    sess["profile"] = dict(DEMO_PERSONAS[persona_id])
-    sess["owned_docs"] = []  # reset owned docs for clean state
+    if persona_id in DEMO_PERSONAS:
+        sess["profile"] = dict(DEMO_PERSONAS[persona_id])
     
-    response = RedirectResponse(url="/results", status_code=303)
-    set_session(response, sess)
-    return response
-
-@app.get("/wizard", response_class=HTMLResponse)
-async def wizard_entry(request: Request):
-    sess = get_session(request)
-    lang = sess.get("lang", "en")
-    profile = sess.get("profile", {})
-    
-    # Render wizard container with step 1
-    return templates.TemplateResponse(
-        request=request,
-        name="wizard.html",
-        context={
-            "lang": lang,
-            "step": 1,
-            "profile": profile,
-            "session": sess
-        }
-    )
-
-@app.get("/wizard/step/{step_num}", response_class=HTMLResponse)
-async def get_wizard_step(request: Request, step_num: int):
-    sess = get_session(request)
-    lang = sess.get("lang", "en")
-    profile = sess.get("profile", {})
-    
-    if step_num < 1 or step_num > 5:
-        step_num = 1
-        
-    return templates.TemplateResponse(
-        request=request,
-        name="wizard_step.html",
-        context={
-            "lang": lang,
-            "step": step_num,
-            "profile": profile,
-            "session": sess
-        }
-    )
-
-@app.post("/wizard/step/1")
-async def post_wizard_step_1(
-    request: Request,
-    age: Optional[int] = Form(None),
-    gender: Optional[str] = Form(None)
-):
-    sess = get_session(request)
-    if "profile" not in sess:
-        sess["profile"] = {}
-        
-    if age is not None:
-        sess["profile"]["age"] = age
-    if gender is not None:
-        sess["profile"]["gender"] = gender
-        
-    lang = sess.get("lang", "en")
-    ctx = {
-        "lang": lang,
-        "step": 2,
-        "profile": sess["profile"],
-        "session": sess
-    }
-    
-    if request.headers.get("HX-Request"):
-        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
-        set_session(response, sess)
-        return response
-        
-    response = RedirectResponse(url="/wizard/step/2", status_code=303)
-    set_session(response, sess)
-    return response
-
-@app.post("/wizard/step/2")
-async def post_wizard_step_2(
-    request: Request,
-    state: Optional[str] = Form(None)
-):
-    sess = get_session(request)
-    if "profile" not in sess:
-        sess["profile"] = {}
-        
-    if state is not None:
-        sess["profile"]["state"] = state
-        
-    lang = sess.get("lang", "en")
-    ctx = {
-        "lang": lang,
-        "step": 3,
-        "profile": sess["profile"],
-        "session": sess
-    }
-    
-    if request.headers.get("HX-Request"):
-        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
-        set_session(response, sess)
-        return response
-        
-    response = RedirectResponse(url="/wizard/step/3", status_code=303)
-    set_session(response, sess)
-    return response
-
-@app.post("/wizard/step/3")
-async def post_wizard_step_3(
-    request: Request,
-    occupation: Optional[str] = Form(None),
-    life_event: Optional[str] = Form(None)
-):
-    sess = get_session(request)
-    if "profile" not in sess:
-        sess["profile"] = {}
-        
-    if occupation is not None:
-        sess["profile"]["occupation"] = occupation
-    if life_event is not None:
-        sess["profile"]["life_event"] = life_event
-        
-    lang = sess.get("lang", "en")
-    ctx = {
-        "lang": lang,
-        "step": 4,
-        "profile": sess["profile"],
-        "session": sess
-    }
-    
-    if request.headers.get("HX-Request"):
-        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
-        set_session(response, sess)
-        return response
-        
-    response = RedirectResponse(url="/wizard/step/4", status_code=303)
-    set_session(response, sess)
-    return response
-
-@app.post("/wizard/step/4")
-async def post_wizard_step_4(
-    request: Request,
-    income_upper_inr: Optional[float] = Form(None),
-    social_category: Optional[str] = Form(None)
-):
-    sess = get_session(request)
-    if "profile" not in sess:
-        sess["profile"] = {}
-        
-    if income_upper_inr is not None:
-        sess["profile"]["income_upper_inr"] = income_upper_inr
-    if social_category is not None:
-        sess["profile"]["social_category"] = social_category
-        
-    lang = sess.get("lang", "en")
-    ctx = {
-        "lang": lang,
-        "step": 5,
-        "profile": sess["profile"],
-        "session": sess
-    }
-    
-    if request.headers.get("HX-Request"):
-        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
-        set_session(response, sess)
-        return response
-        
+    # Per requirement: Each persona must fill the whole profile and jump directly to the review step (Step 5)
     response = RedirectResponse(url="/wizard/step/5", status_code=303)
     set_session(response, sess)
     return response
 
+# Wizard Routes
+@app.get("/wizard", response_class=HTMLResponse)
+async def wizard_root():
+    return RedirectResponse(url="/wizard/step/1", status_code=303)
+
+@app.get("/wizard/step/{step_num}", response_class=HTMLResponse)
+async def get_wizard_step(request: Request, step_num: int, return_to: Optional[str] = None):
+    step = max(1, min(5, step_num))
+    sess = get_session(request)
+    lang = sess.get("lang", "en")
+    profile = sess.get("profile", {})
+    
+    ctx = {
+        "step": step,
+        "profile": profile,
+        "lang": lang,
+        "session": sess,
+        "return_to": return_to
+    }
+    
+    # If HTMX partial swap request
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            request=request,
+            name="wizard_step.html",
+            context=ctx
+        )
+    
+    # Otherwise full page render
+    return templates.TemplateResponse(
+        request=request,
+        name="wizard.html",
+        context=ctx
+    )
+
+@app.post("/wizard/step/1", response_class=HTMLResponse)
+async def post_wizard_step1(
+    request: Request,
+    age: int = Form(...),
+    gender: str = Form(...),
+    return_to: Optional[str] = Form(None)
+):
+    sess = get_session(request)
+    sess.setdefault("profile", {})
+    sess["profile"]["age"] = age
+    sess["profile"]["gender"] = gender
+    
+    next_step = 5 if return_to == "review" else 2
+    ctx = {
+        "step": next_step,
+        "profile": sess["profile"],
+        "lang": sess.get("lang", "en"),
+        "session": sess
+    }
+    
+    if request.headers.get("HX-Request"):
+        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
+    else:
+        response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
+        
+    set_session(response, sess)
+    return response
+
+@app.post("/wizard/step/2", response_class=HTMLResponse)
+async def post_wizard_step2(
+    request: Request,
+    state: Optional[str] = Form(None),
+    state_dropdown: Optional[str] = Form(None),
+    return_to: Optional[str] = Form(None)
+):
+    chosen_state = state or state_dropdown or "Uttar Pradesh"
+    sess = get_session(request)
+    sess.setdefault("profile", {})
+    sess["profile"]["state"] = chosen_state
+    
+    next_step = 5 if return_to == "review" else 3
+    ctx = {
+        "step": next_step,
+        "profile": sess["profile"],
+        "lang": sess.get("lang", "en"),
+        "session": sess
+    }
+    
+    if request.headers.get("HX-Request"):
+        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
+    else:
+        response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
+        
+    set_session(response, sess)
+    return response
+
+@app.post("/wizard/step/3", response_class=HTMLResponse)
+async def post_wizard_step3(
+    request: Request,
+    occupation: str = Form(...),
+    life_event: str = Form(...),
+    return_to: Optional[str] = Form(None)
+):
+    sess = get_session(request)
+    sess.setdefault("profile", {})
+    sess["profile"]["occupation"] = occupation
+    sess["profile"]["life_event"] = life_event
+    
+    next_step = 5 if return_to == "review" else 4
+    ctx = {
+        "step": next_step,
+        "profile": sess["profile"],
+        "lang": sess.get("lang", "en"),
+        "session": sess
+    }
+    
+    if request.headers.get("HX-Request"):
+        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
+    else:
+        response = RedirectResponse(url=f"/wizard/step/{next_step}", status_code=303)
+        
+    set_session(response, sess)
+    return response
+
+@app.post("/wizard/step/4", response_class=HTMLResponse)
+async def post_wizard_step4(
+    request: Request,
+    income_upper_inr: int = Form(...),
+    social_category: str = Form(...),
+    return_to: Optional[str] = Form(None)
+):
+    sess = get_session(request)
+    sess.setdefault("profile", {})
+    sess["profile"]["income_upper_inr"] = income_upper_inr
+    sess["profile"]["social_category"] = social_category
+    
+    ctx = {
+        "step": 5,
+        "profile": sess["profile"],
+        "lang": sess.get("lang", "en"),
+        "session": sess
+    }
+    
+    if request.headers.get("HX-Request"):
+        response = templates.TemplateResponse(request=request, name="wizard_step.html", context=ctx)
+    else:
+        response = RedirectResponse(url="/wizard/step/5", status_code=303)
+        
+    set_session(response, sess)
+    return response
+
 @app.get("/results", response_class=HTMLResponse)
-async def view_results(request: Request):
+async def results(request: Request):
     sess = get_session(request)
     profile = sess.get("profile", {})
+    if not profile or "age" not in profile:
+        return RedirectResponse(url="/wizard/step/1", status_code=303)
+        
     lang = sess.get("lang", "en")
+    eligible_now, almost_eligible = match_schemes_for_profile(SCHEMES, profile, lang)
     
-    # Run eligibility matcher
-    eligible_now, almost_eligible = match_schemes_for_profile(SCHEMES, profile)
-    
+    needed_docs = set()
+    for s in eligible_now + almost_eligible:
+        needed_docs.update(s.get("documents", []))
+        
     return templates.TemplateResponse(
         request=request,
         name="results.html",
         context={
-            "lang": lang,
-            "profile": profile,
             "eligible_now": eligible_now,
             "almost_eligible": almost_eligible,
+            "total_docs_needed": len(needed_docs),
+            "profile": profile,
+            "lang": lang,
             "session": sess
         }
     )
 
+def build_checklist_context(sess: dict, lang: str) -> dict:
+    profile = sess.get("profile", {})
+    owned_docs = set(sess.get("owned_docs", []))
+    eligible_now, almost_eligible = match_schemes_for_profile(SCHEMES, profile, lang)
+    matched_schemes = eligible_now + almost_eligible
+
+    docs_map = {}
+    for s in matched_schemes:
+        s_title = s.get("name_hi" if lang == "hi" else "name")
+        for doc_id in s.get("documents", []):
+            if doc_id in DOCS_BY_ID:
+                if doc_id not in docs_map:
+                    doc_item = dict(DOCS_BY_ID[doc_id])
+                    doc_item["scheme_ids"] = []
+                    doc_item["scheme_names"] = []
+                    docs_map[doc_id] = doc_item
+                docs_map[doc_id]["scheme_ids"].append(s["id"])
+                if s_title not in docs_map[doc_id]["scheme_names"]:
+                    docs_map[doc_id]["scheme_names"].append(s_title)
+
+    documents_list = list(docs_map.values())
+    total_needed = len(documents_list)
+    owned_count = sum(1 for d in documents_list if d["id"] in owned_docs)
+    readiness_pct = round((owned_count / total_needed) * 100) if total_needed > 0 else 100
+
+    return {
+        "matched_schemes": matched_schemes,
+        "documents_list": documents_list,
+        "owned_docs": list(owned_docs),
+        "total_needed": total_needed,
+        "owned_count": owned_count,
+        "readiness_pct": readiness_pct,
+        "profile": profile,
+        "lang": lang,
+        "session": sess,
+        "selected_scheme_id": "all"
+    }
+
 @app.get("/checklist", response_class=HTMLResponse)
-async def view_checklist(request: Request):
+async def get_checklist(request: Request):
     sess = get_session(request)
     profile = sess.get("profile", {})
-    lang = sess.get("lang", "en")
-    owned_docs = set(sess.get("owned_docs", []))
-    
-    eligible_now, _ = match_schemes_for_profile(SCHEMES, profile)
-    
-    needed_doc_ids = set()
-    for s in eligible_now:
-        for d in s.get("required_docs", []):
-            needed_doc_ids.add(d)
-            
-    if not needed_doc_ids:
-        needed_doc_ids = {"aadhaar", "bank_passbook", "ration_card", "income_cert"}
+    if not profile or "age" not in profile:
+        return RedirectResponse(url="/wizard/step/1", status_code=303)
         
-    needed_docs = [DOCS_BY_ID[did] for did in needed_doc_ids if did in DOCS_BY_ID]
-    
-    owned_count = sum(1 for d in needed_docs if d["id"] in owned_docs)
-    total_count = len(needed_docs)
-    readiness_pct = int((owned_count / total_count * 100)) if total_count > 0 else 100
-    
+    lang = sess.get("lang", "en")
+    ctx = build_checklist_context(sess, lang)
     return templates.TemplateResponse(
         request=request,
         name="checklist.html",
-        context={
-            "lang": lang,
-            "needed_docs": needed_docs,
-            "owned_docs": owned_docs,
-            "readiness_pct": readiness_pct,
-            "owned_count": owned_count,
-            "total_count": total_count,
-            "eligible_schemes_count": len(eligible_now),
-            "session": sess
-        }
+        context=ctx
     )
 
-@app.post("/checklist/toggle")
-async def toggle_doc(request: Request, doc_id: str = Form(...)):
+@app.post("/checklist/toggle-doc", response_class=HTMLResponse)
+async def toggle_document(request: Request, doc_id: str = Form(...)):
     sess = get_session(request)
     owned = set(sess.get("owned_docs", []))
     if doc_id in owned:
@@ -357,34 +410,8 @@ async def toggle_doc(request: Request, doc_id: str = Form(...)):
         owned.add(doc_id)
     sess["owned_docs"] = list(owned)
     
-    profile = sess.get("profile", {})
     lang = sess.get("lang", "en")
-    eligible_now, _ = match_schemes_for_profile(SCHEMES, profile)
-    
-    needed_doc_ids = set()
-    for s in eligible_now:
-        for d in s.get("required_docs", []):
-            needed_doc_ids.add(d)
-            
-    if not needed_doc_ids:
-        needed_doc_ids = {"aadhaar", "bank_passbook", "ration_card", "income_cert"}
-        
-    needed_docs = [DOCS_BY_ID[did] for did in needed_doc_ids if did in DOCS_BY_ID]
-    
-    owned_count = sum(1 for d in needed_docs if d["id"] in owned)
-    total_count = len(needed_docs)
-    readiness_pct = int((owned_count / total_count * 100)) if total_count > 0 else 100
-    
-    ctx = {
-        "lang": lang,
-        "needed_docs": needed_docs,
-        "owned_docs": owned,
-        "readiness_pct": readiness_pct,
-        "owned_count": owned_count,
-        "total_count": total_count,
-        "eligible_schemes_count": len(eligible_now),
-        "session": sess
-    }
+    ctx = build_checklist_context(sess, lang)
     
     if request.headers.get("HX-Request"):
         response = templates.TemplateResponse(
@@ -392,10 +419,9 @@ async def toggle_doc(request: Request, doc_id: str = Form(...)):
             name="checklist_partial.html",
             context=ctx
         )
-        set_session(response, sess)
-        return response
+    else:
+        response = RedirectResponse(url="/checklist", status_code=303)
         
-    response = RedirectResponse(url="/checklist", status_code=303)
     set_session(response, sess)
     return response
 
