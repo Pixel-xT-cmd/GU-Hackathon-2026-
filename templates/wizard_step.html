@@ -27,7 +27,7 @@
 
   <!-- STEP 1: Age + Gender -->
   {% if step == 1 %}
-  <form hx-post="/wizard/step/1" hx-target="#wizard-step-area" hx-swap="innerHTML">
+  <form method="post" action="/wizard/step/1" hx-post="/wizard/step/1" hx-target="#wizard-step-area" hx-swap="innerHTML">
     {% if return_to == 'review' %}
     <input type="hidden" name="return_to" value="review">
     {% endif %}
@@ -108,7 +108,7 @@
 
   <!-- STEP 2: State -->
   {% if step == 2 %}
-  <form hx-post="/wizard/step/2" hx-target="#wizard-step-area" hx-swap="innerHTML">
+  <form method="post" action="/wizard/step/2" hx-post="/wizard/step/2" hx-target="#wizard-step-area" hx-swap="innerHTML">
     {% if return_to == 'review' %}
     <input type="hidden" name="return_to" value="review">
     {% endif %}
@@ -206,7 +206,7 @@
 
   <!-- STEP 3: Occupation + Life Event -->
   {% if step == 3 %}
-  <form hx-post="/wizard/step/3" hx-target="#wizard-step-area" hx-swap="innerHTML">
+  <form method="post" action="/wizard/step/3" hx-post="/wizard/step/3" hx-target="#wizard-step-area" hx-swap="innerHTML">
     {% if return_to == 'review' %}
     <input type="hidden" name="return_to" value="review">
     {% endif %}
@@ -295,7 +295,7 @@
 
   <!-- STEP 4: Income + Category -->
   {% if step == 4 %}
-  <form hx-post="/wizard/step/4" hx-target="#wizard-step-area" hx-swap="innerHTML">
+  <form method="post" action="/wizard/step/4" hx-post="/wizard/step/4" hx-target="#wizard-step-area" hx-swap="innerHTML">
     {% if return_to == 'review' %}
     <input type="hidden" name="return_to" value="review">
     {% endif %}
@@ -436,7 +436,7 @@
             </td>
             <td style="padding: 0.75rem 1rem; text-align: right;">
               <button type="button" class="btn-secondary" style="min-height: 36px; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
-                      hx-get="/wizard/step/2?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+                       hx-get="/wizard/step/2?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
                 {% if lang == 'hi' %}बदलें{% else %}Edit{% endif %}
               </button>
             </td>
