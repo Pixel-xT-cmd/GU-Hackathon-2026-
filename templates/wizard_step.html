@@ -1,0 +1,517 @@
+<!-- Step Container -->
+<div class="passbook-card wizard-step-container" id="wizard-step-card">
+
+  <!-- Zero-Storage On-Screen Trust Banner -->
+  <div style="background: #E8F0FE; border: 1.5px solid #AECBFA; border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#174EA6" stroke-width="2.5" style="flex-shrink: 0;">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <div style="font-size: 0.85rem; color: #174EA6; font-weight: 600; line-height: 1.35;">
+      {% if lang == 'hi' %}
+        🔒 आपका डेटा कहीं भी संचित नहीं होता। कोई लॉगिन आवश्यक नहीं। संपूर्ण विवरण केवल आपके ब्राउज़र के अस्थायी सत्र में रहता है।
+      {% else %}
+        🔒 Stored nowhere. No login required. Your profile is processed strictly in temporary session memory and wiped when you close this browser.
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Step Progress Indicator -->
+  <div class="step-indicator">
+    <div class="step-pill {% if step == 1 %}active{% endif %}">1. {% if lang == 'hi' %}आयु व लिंग{% else %}Age & Gender{% endif %}</div>
+    <div class="step-pill {% if step == 2 %}active{% endif %}">2. {% if lang == 'hi' %}राज्य{% else %}State{% endif %}</div>
+    <div class="step-pill {% if step == 3 %}active{% endif %}">3. {% if lang == 'hi' %}पेशा / जीवन घटना{% else %}Work & Life Event{% endif %}</div>
+    <div class="step-pill {% if step == 4 %}active{% endif %}">4. {% if lang == 'hi' %}आय व श्रेणी{% else %}Income & Category{% endif %}</div>
+    <div class="step-pill {% if step == 5 %}active{% endif %}">5. {% if lang == 'hi' %}सत्यापन{% else %}Review{% endif %}</div>
+  </div>
+
+  <!-- STEP 1: Age + Gender -->
+  {% if step == 1 %}
+  <form hx-post="/wizard/step/1" hx-target="#wizard-step-area" hx-swap="innerHTML">
+    {% if return_to == 'review' %}
+    <input type="hidden" name="return_to" value="review">
+    {% endif %}
+    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest); margin-bottom: 0.5rem;">
+      {% if lang == 'hi' %}चरण 1: अपनी आयु और लिंग बताएं{% else %}Step 1: Your Age & Gender{% endif %}
+    </h3>
+    <p style="font-size: 0.95rem; color: var(--color-forest-soft); margin-bottom: 1.5rem;">
+      {% if lang == 'hi' %}
+        कई सरकारी योजनाएं विशिष्ट आयु वर्ग (उदा. वरिष्ठ नागरिक, छात्र) अथवा महिलाओं के लिए होती हैं।
+      {% else %}
+        Government schemes have strict age brackets (e.g. senior pensions at 60+, youth scholarships up to 25) and female-specific grants.
+      {% endif %}
+    </p>
+
+    <!-- Age Input -->
+    <div style="margin-bottom: 1.5rem;">
+      <label for="age" style="display: block; font-weight: 700; margin-bottom: 0.4rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}आयु (वर्ष में):{% else %}Age (in years):{% endif %}
+      </label>
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <input type="number" id="age" name="age" min="1" max="110" required
+               value="{{ profile.get('age', 35) }}"
+               style="font-size: 1.35rem; font-weight: 700; padding: 0.6rem 1rem; width: 120px; border: 2px solid var(--color-border-dark); border-radius: 6px; background: #FFF; color: var(--color-forest); text-align: center;">
+        
+        <!-- Quick Preset Age Chips -->
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button type="button" class="btn-secondary" style="min-height: 42px; padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="document.getElementById('age').value=20">20 {% if lang == 'hi' %}वर्ष{% else %}yrs{% endif %}</button>
+          <button type="button" class="btn-secondary" style="min-height: 42px; padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="document.getElementById('age').value=35">35 {% if lang == 'hi' %}वर्ष{% else %}yrs{% endif %}</button>
+          <button type="button" class="btn-secondary" style="min-height: 42px; padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="document.getElementById('age').value=60">60 {% if lang == 'hi' %}वर्ष{% else %}yrs{% endif %}</button>
+          <button type="button" class="btn-secondary" style="min-height: 42px; padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="document.getElementById('age').value=72">72 {% if lang == 'hi' %}वर्ष{% else %}yrs{% endif %}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gender Selector (Large Accessible Tiles) -->
+    <div style="margin-bottom: 1.5rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}लिंग:{% else %}Gender:{% endif %}
+      </label>
+      <div class="option-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+        {% set current_gender = profile.get('gender', 'female') %}
+        <label class="option-tile {% if current_gender == 'female' %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="gender" value="female" {% if current_gender == 'female' %}checked{% endif %} required>
+          <span class="tile-label">👩 {% if lang == 'hi' %}महिला{% else %}Female{% endif %}</span>
+        </label>
+        <label class="option-tile {% if current_gender == 'male' %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="gender" value="male" {% if current_gender == 'male' %}checked{% endif %}>
+          <span class="tile-label">👨 {% if lang == 'hi' %}पुरुष{% else %}Male{% endif %}</span>
+        </label>
+        <label class="option-tile {% if current_gender == 'transgender' %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="gender" value="transgender" {% if current_gender == 'transgender' %}checked{% endif %}>
+          <span class="tile-label">⚧ {% if lang == 'hi' %}ट्रांसजेंडर{% else %}Transgender{% endif %}</span>
+        </label>
+        <label class="option-tile {% if current_gender == 'other' %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="gender" value="other" {% if current_gender == 'other' %}checked{% endif %}>
+          <span class="tile-label">⚪ {% if lang == 'hi' %}अन्य{% else %}Other{% endif %}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; justify-content: {% if return_to == 'review' %}space-between{% else %}flex-end{% endif %}; gap: 1rem; margin-top: 2rem;">
+      {% if return_to == 'review' %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/5" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}रद्द करें (समीक्षा){% else %}Cancel (Back to Review){% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 180px;">
+        {% if lang == 'hi' %}सहेजें और समीक्षा पर लौटें →{% else %}Save & Return to Review →{% endif %}
+      </button>
+      {% else %}
+      <button type="submit" class="btn-primary" style="min-width: 160px;">
+        {% if lang == 'hi' %}अगला: राज्य चुनें →{% else %}Next: Select State →{% endif %}
+      </button>
+      {% endif %}
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 2: State -->
+  {% if step == 2 %}
+  <form hx-post="/wizard/step/2" hx-target="#wizard-step-area" hx-swap="innerHTML">
+    {% if return_to == 'review' %}
+    <input type="hidden" name="return_to" value="review">
+    {% endif %}
+    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest); margin-bottom: 0.5rem;">
+      {% if lang == 'hi' %}चरण 2: अपना राज्य या केंद्र शासित प्रदेश चुनें{% else %}Step 2: Select Your State or UT{% endif %}
+    </h3>
+    <p style="font-size: 0.95rem; color: var(--color-forest-soft); margin-bottom: 1.5rem;">
+      {% if lang == 'hi' %}
+        केंद्रीय योजनाएं सभी राज्यों पर लागू होती हैं, जबकि राज्य योजनाएं केवल संबंधित राज्य के निवासियों के लिए हैं।
+      {% else %}
+        Central schemes cover all citizens nationwide, while state schemes require state domicile/residence.
+      {% endif %}
+    </p>
+
+    {% set current_state = profile.get('state', 'Uttar Pradesh') %}
+
+    <!-- Prominent State Tiles -->
+    <div style="margin-bottom: 1rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}प्रमुख राज्य (1-क्लिक चयन):{% else %}Popular States (1-Click Selection):{% endif %}
+      </label>
+      <div class="option-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        {% for st_name, st_hi in [
+          ('Uttar Pradesh', 'उत्तर प्रदेश'),
+          ('Maharashtra', 'महाराष्ट्र'),
+          ('Rajasthan', 'राजस्थान'),
+          ('Madhya Pradesh', 'मध्य प्रदेश'),
+          ('Bihar', 'बिहार'),
+          ('West Bengal', 'पश्चिम बंगाल'),
+          ('Karnataka', 'कर्नाटक'),
+          ('Tamil Nadu', 'तमिलनाडु')
+        ] %}
+        <label class="option-tile {% if current_state == st_name %}selected{% endif %}" onclick="selectTile(this); document.getElementById('state-select').value='{{ st_name }}';">
+          <input type="radio" name="state" value="{{ st_name }}" {% if current_state == st_name %}checked{% endif %}>
+          <span class="tile-label">{{ st_hi if lang == 'hi' else st_name }}</span>
+          <span class="tile-sub">{{ st_name if lang == 'hi' else st_hi }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Dropdown for All Other States -->
+    <div style="margin-top: 1.25rem;">
+      <label for="state-select" style="display: block; font-weight: 700; margin-bottom: 0.4rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}अथवा सूची में से अन्य राज्य चुनें:{% else %}Or choose from all Indian States & UTs:{% endif %}
+      </label>
+      <select id="state-select" name="state_dropdown" onchange="syncStateDropdown(this)"
+              style="width: 100%; max-width: 380px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 600; border: 2px solid var(--color-border-dark); border-radius: 6px; background: #FFF; color: var(--color-forest);">
+        {% for st in [
+          'Uttar Pradesh', 'Maharashtra', 'Rajasthan', 'Madhya Pradesh', 'Bihar', 'West Bengal', 'Karnataka', 'Tamil Nadu',
+          'Andhra Pradesh', 'Assam', 'Chhattisgarh', 'Delhi', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Kerala',
+          'Odisha', 'Punjab', 'Telangana', 'Uttarakhand', 'Other'
+        ] %}
+        <option value="{{ st }}" {% if current_state == st %}selected{% endif %}>{{ st }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <script>
+      function syncStateDropdown(sel) {
+        const val = sel.value;
+        const radios = document.querySelectorAll('input[name="state"]');
+        radios.forEach(r => {
+          if (r.value === val) {
+            r.checked = true;
+            r.closest('.option-tile').classList.add('selected');
+          } else {
+            r.checked = false;
+            r.closest('.option-tile')?.classList.remove('selected');
+          }
+        });
+      }
+    </script>
+
+    <!-- Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+      {% if return_to == 'review' %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/5" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}रद्द करें (समीक्षा){% else %}Cancel (Back to Review){% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 180px;">
+        {% if lang == 'hi' %}सहेजें और समीक्षा पर लौटें →{% else %}Save & Return to Review →{% endif %}
+      </button>
+      {% else %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/1" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}वापस{% else %}Back{% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 160px;">
+        {% if lang == 'hi' %}अगला: पेशा चुनें →{% else %}Next: Work & Life Event →{% endif %}
+      </button>
+      {% endif %}
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 3: Occupation + Life Event -->
+  {% if step == 3 %}
+  <form hx-post="/wizard/step/3" hx-target="#wizard-step-area" hx-swap="innerHTML">
+    {% if return_to == 'review' %}
+    <input type="hidden" name="return_to" value="review">
+    {% endif %}
+    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest); margin-bottom: 0.5rem;">
+      {% if lang == 'hi' %}चरण 3: आपका पेशा और जीवन घटना{% else %}Step 3: Occupation & Life Event{% endif %}
+    </h3>
+    <p style="font-size: 0.95rem; color: var(--color-forest-soft); margin-bottom: 1.5rem;">
+      {% if lang == 'hi' %}
+        सरकारी कल्याणकारी योजनाएं अक्सर विशिष्ट कार्यक्षेत्र (जैसे किसान, छात्र, निर्माण श्रमिक) या जीवन के अहम पड़ाव पर लक्षित होती हैं।
+      {% else %}
+        Schemes directly serve specific occupations (farmers, students, gig workers) or life milestones (pregnancy, starting a business, retirement).
+      {% endif %}
+    </p>
+
+    {% set cur_occ = profile.get('occupation', 'farmer') %}
+    {% set cur_le = profile.get('life_event', 'none') %}
+
+    <!-- Occupation Grid -->
+    <div style="margin-bottom: 1.75rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}वर्तमान पेशा / कार्यक्षेत्र:{% else %}Current Occupation:{% endif %}
+      </label>
+      <div class="option-grid">
+        {% for occ_id, en_label, hi_label, icon in [
+          ('farmer', 'Farmer / Agriculturalist', 'किसान / कृषि कामगार', '🌾'),
+          ('student', 'Student / College Enrolled', 'छात्र / अध्ययनरत', '🎓'),
+          ('informal_worker', 'Daily Wage / Construction', 'दैनिक श्रमिक / निर्माण', '🔨'),
+          ('gig_worker', 'Gig / Delivery / Transport', 'गिग / डिलीवरी वर्कर', '🛵'),
+          ('self_employed', 'Self-Employed / Artisan / Shop', 'स्व-नियोजित / कारीगर / दुकान', '🛠️'),
+          ('unemployed', 'Unemployed / Job Seeker', 'बेरोजगार / रोजगार तलाश', '💼'),
+          ('homemaker', 'Homemaker / Domestic Work', 'गृहिणी / गृह कार्य', '🏡'),
+          ('other', 'Other Occupation', 'अन्य पेशा', '👤')
+        ] %}
+        <label class="option-tile {% if cur_occ == occ_id %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="occupation" value="{{ occ_id }}" {% if cur_occ == occ_id %}checked{% endif %} required>
+          <span class="tile-label">{{ icon }} {{ hi_label if lang == 'hi' else en_label }}</span>
+          <span class="tile-sub">{{ en_label if lang == 'hi' else hi_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Life Event Grid -->
+    <div style="margin-bottom: 1.5rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}कोई हालिया या आगामी जीवन घटना:{% else %}Recent or Upcoming Life Event:{% endif %}
+      </label>
+      <div class="option-grid">
+        {% for le_id, en_label, hi_label, icon in [
+          ('none', 'None / Routine screening', 'कोई नहीं / सामान्य जांच', '✓'),
+          ('pregnancy', 'Pregnancy / Childbirth', 'गर्भावस्था / प्रसव', '👶'),
+          ('education', 'Higher Education / Exam Prep', 'उच्च शिक्षा / परीक्षा तैयारी', '📚'),
+          ('starting_business', 'Starting / Expanding Business', 'नया व्यवसाय / दुकान शुरू करना', '🚀'),
+          ('job_loss', 'Job Loss / Searching Work', 'रोजगार संकट / कार्य की तलाश', '⚠️'),
+          ('retirement', 'Senior Citizen / Retirement', 'वरिष्ठ नागरिक / सेवानिवृत्ति', '⏳')
+        ] %}
+        <label class="option-tile {% if cur_le == le_id %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="life_event" value="{{ le_id }}" {% if cur_le == le_id %}checked{% endif %} required>
+          <span class="tile-label">{{ icon }} {{ hi_label if lang == 'hi' else en_label }}</span>
+          <span class="tile-sub">{{ en_label if lang == 'hi' else hi_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+      {% if return_to == 'review' %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/5" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}रद्द करें (समीक्षा){% else %}Cancel (Back to Review){% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 180px;">
+        {% if lang == 'hi' %}सहेजें और समीक्षा पर लौटें →{% else %}Save & Return to Review →{% endif %}
+      </button>
+      {% else %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/2" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}वापस{% else %}Back{% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 160px;">
+        {% if lang == 'hi' %}अगला: आय व श्रेणी चुनें →{% else %}Next: Income & Category →{% endif %}
+      </button>
+      {% endif %}
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 4: Income + Category -->
+  {% if step == 4 %}
+  <form hx-post="/wizard/step/4" hx-target="#wizard-step-area" hx-swap="innerHTML">
+    {% if return_to == 'review' %}
+    <input type="hidden" name="return_to" value="review">
+    {% endif %}
+    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--color-forest); margin-bottom: 0.5rem;">
+      {% if lang == 'hi' %}चरण 4: पारिवारिक आय व सामाजिक श्रेणी{% else %}Step 4: Household Income & Social Category{% endif %}
+    </h3>
+    <p style="font-size: 0.95rem; color: var(--color-forest-soft); margin-bottom: 1.5rem;">
+      {% if lang == 'hi' %}
+        अधिकांश कल्याणकारी योजनाओं में आय सीमा (जैसे ₹2.5 लाख तक) तथा सामाजिक श्रेणी के आधार पर विशेष प्रावधान होते हैं।
+      {% else %}
+        Most public welfare schemes use verified annual income thresholds (e.g. up to Rs 2.5L) and affirmative social categories.
+      {% endif %}
+    </p>
+
+    {% set cur_income = profile.get('income_upper_inr', 250000) %}
+    {% set cur_cat = profile.get('social_category', 'General') %}
+
+    <!-- Income Brackets -->
+    <div style="margin-bottom: 1.75rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}वार्षिक पारिवारिक आय ब्रैकेट:{% else %}Annual Household Income Bracket:{% endif %}
+      </label>
+      <div class="option-grid" style="grid-template-columns: 1fr;">
+        {% for bound, code, en_label, hi_label, note in [
+          (100000, 'B1', 'Up to Rs 1 Lakh / year', '₹1 लाख तक वार्षिक', 'BPL / Destitute / Old Age Pension priority'),
+          (250000, 'B2', 'Rs 1 Lakh to Rs 2.5 Lakh / year', '₹1 लाख से ₹2.5 लाख वार्षिक', 'Standard threshold for PM-KISAN, PMAY, scholarships'),
+          (500000, 'B3', 'Rs 2.5 Lakh to Rs 5 Lakh / year', '₹2.5 लाख से ₹5 लाख वार्षिक', 'Atal Pension, Middle-Income education assistance'),
+          (800000, 'B4', 'Rs 5 Lakh to Rs 8 Lakh / year', '₹5 लाख से ₹8 लाख वार्षिक', 'Non-Taxpayer / EWS upper limit, PM Surya Ghar'),
+          (10000000, 'B5', 'Above Rs 8 Lakh / year', '₹8 लाख से अधिक वार्षिक', 'Higher income tier')
+        ] %}
+        <label class="option-tile {% if cur_income == bound %}selected{% endif %}" onclick="selectTile(this)" style="min-height: 52px; padding: 0.85rem 1.25rem;">
+          <input type="radio" name="income_upper_inr" value="{{ bound }}" {% if cur_income == bound %}checked{% endif %} required>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="tile-label"><strong>[{{ code }}]</strong> {{ hi_label if lang == 'hi' else en_label }}</span>
+            <span style="font-size: 0.8rem; color: #666;">{{ note }}</span>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Social Category -->
+    <div style="margin-bottom: 1.5rem;">
+      <label style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--color-forest);">
+        {% if lang == 'hi' %}सामाजिक श्रेणी (आरक्षण / प्राथमिकता वर्ग):{% else %}Social Category (Affirmative Action / Priority Group):{% endif %}
+      </label>
+      <div class="option-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+        {% for cat_id, cat_hi in [
+          ('General', 'सामान्य (General)'),
+          ('OBC', 'अन्य पिछड़ा वर्ग (OBC)'),
+          ('SC', 'अनुसूचित जाति (SC)'),
+          ('ST', 'अनुसूचित जनजाति (ST)'),
+          ('EWS', 'आर्थिक कमजोर वर्ग (EWS)')
+        ] %}
+        <label class="option-tile {% if cur_cat == cat_id %}selected{% endif %}" onclick="selectTile(this)">
+          <input type="radio" name="social_category" value="{{ cat_id }}" {% if cur_cat == cat_id %}checked{% endif %} required>
+          <span class="tile-label">{{ cat_hi if lang == 'hi' else cat_id }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+      {% if return_to == 'review' %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/5" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}रद्द करें (समीक्षा){% else %}Cancel (Back to Review){% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 180px;">
+        {% if lang == 'hi' %}सहेजें और समीक्षा पर लौटें →{% else %}Save & Return to Review →{% endif %}
+      </button>
+      {% else %}
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/3" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}वापस{% else %}Back{% endif %}
+      </button>
+      <button type="submit" class="btn-primary" style="min-width: 160px;">
+        {% if lang == 'hi' %}चरण 5: समीक्षा करें →{% else %}Next: Review Profile →{% endif %}
+      </button>
+      {% endif %}
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- STEP 5: Review & Confirm -->
+  {% if step == 5 %}
+  <div id="step-5-review">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+      <div>
+        <h3 style="font-family: var(--font-display); font-size: 1.6rem; color: var(--color-forest); margin-bottom: 0.35rem;">
+          {% if lang == 'hi' %}चरण 5: अपनी प्रोफाइल की समीक्षा करें{% else %}Step 5: Review & Confirm Profile{% endif %}
+        </h3>
+        <p style="font-size: 0.95rem; color: var(--color-forest-soft);">
+          {% if lang == 'hi' %}
+            नीचे दिए गए विवरण के आधार पर पात्रता नियमों का मिलान किया जाएगा। किसी भी बिंदु को बदलने के लिए 'संपादित करें' पर क्लिक करें।
+          {% else %}
+            Deterministic rules will match your profile against central and state schemes. Click 'Edit' to change any parameter.
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Verified Stamp -->
+      <div class="civic-stamp">
+        <span>PROFILE COMPLETE</span>
+        <span style="font-size: 0.65rem; opacity: 0.85;">READY TO MATCH</span>
+      </div>
+    </div>
+
+    <div class="passbook-edge"></div>
+
+    <!-- Profile Summary Ledger Table -->
+    <div style="background: var(--color-parchment-muted); border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+        <tbody>
+          <!-- Age & Gender -->
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 0.75rem 1rem; font-weight: 700; width: 35%; color: var(--color-forest);">
+              {% if lang == 'hi' %}आयु व लिंग{% else %}Age & Gender{% endif %}
+            </td>
+            <td style="padding: 0.75rem 1rem; color: var(--color-forest);">
+              <strong>{{ profile.get('age', 35) }}</strong> {% if lang == 'hi' %}वर्ष{% else %}years{% endif %} •
+              <span style="text-transform: capitalize;">{{ profile.get('gender', 'female') }}</span>
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: right;">
+              <button type="button" class="btn-secondary" style="min-height: 36px; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                      hx-get="/wizard/step/1?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+                {% if lang == 'hi' %}बदलें{% else %}Edit{% endif %}
+              </button>
+            </td>
+          </tr>
+
+          <!-- State -->
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--color-forest);">
+              {% if lang == 'hi' %}राज्य{% else %}State / Domicile{% endif %}
+            </td>
+            <td style="padding: 0.75rem 1rem; color: var(--color-forest);">
+              <strong>{{ profile.get('state', 'Uttar Pradesh') }}</strong>
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: right;">
+              <button type="button" class="btn-secondary" style="min-height: 36px; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                      hx-get="/wizard/step/2?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+                {% if lang == 'hi' %}बदलें{% else %}Edit{% endif %}
+              </button>
+            </td>
+          </tr>
+
+          <!-- Occupation & Life Event -->
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--color-forest);">
+              {% if lang == 'hi' %}पेशा व जीवन घटना{% else %}Work & Life Event{% endif %}
+            </td>
+            <td style="padding: 0.75rem 1rem; color: var(--color-forest);">
+              <strong>{{ profile.get('occupation', 'farmer') | replace('_', ' ') | title }}</strong>
+              {% if profile.get('life_event') and profile.get('life_event') != 'none' %}
+                <span style="color: #666;">({{ profile.get('life_event') | replace('_', ' ') | title }})</span>
+              {% endif %}
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: right;">
+              <button type="button" class="btn-secondary" style="min-height: 36px; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                      hx-get="/wizard/step/3?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+                {% if lang == 'hi' %}बदलें{% else %}Edit{% endif %}
+              </button>
+            </td>
+          </tr>
+
+          <!-- Income & Category -->
+          <tr>
+            <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--color-forest);">
+              {% if lang == 'hi' %}आय व श्रेणी{% else %}Income & Category{% endif %}
+            </td>
+            <td style="padding: 0.75rem 1rem; color: var(--color-forest);">
+              {% set inc = profile.get('income_upper_inr', 250000) %}
+              <strong>
+                {% if inc <= 100000 %}Up to ₹1 Lakh (B1)
+                {% elif inc <= 250000 %}₹1L - ₹2.5 Lakh (B2)
+                {% elif inc <= 500000 %}₹2.5L - ₹5 Lakh (B3)
+                {% elif inc <= 800000 %}₹5L - ₹8 Lakh (B4)
+                {% else %}Above ₹8 Lakh (B5){% endif %}
+              </strong> • Category: <strong>{{ profile.get('social_category', 'General') }}</strong>
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: right;">
+              <button type="button" class="btn-secondary" style="min-height: 36px; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                      hx-get="/wizard/step/4?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+                {% if lang == 'hi' %}बदलें{% else %}Edit{% endif %}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Final Confirmation CTA Button -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <button type="button" class="btn-secondary" hx-get="/wizard/step/4?return_to=review" hx-target="#wizard-step-area" hx-swap="innerHTML">
+        ← {% if lang == 'hi' %}संशोधन करें{% else %}Edit Previous{% endif %}
+      </button>
+
+      <a href="/results" class="btn-primary" id="confirm-match-btn" style="min-width: 220px; font-size: 1.15rem;">
+        {% if lang == 'hi' %}
+          पात्र योजनाएं और दस्तावेज़ देखें (मिलान करें) →
+        {% else %}
+          Find Matching Schemes & Checklist →
+        {% endif %}
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  function selectTile(tile) {
+    const parent = tile.parentElement;
+    parent.querySelectorAll('.option-tile').forEach(t => t.classList.remove('selected'));
+    tile.classList.add('selected');
+    const input = tile.querySelector('input');
+    if (input) input.checked = true;
+  }
+</script>
