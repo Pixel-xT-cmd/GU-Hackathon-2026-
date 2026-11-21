@@ -1,0 +1,44 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.github_batches/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Node / Frontend & Wrangler
+node_modules/
+.wrangler/
+.cloudflare/
+dist/
+dist.zip
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+ehthumbs.db
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+Cline/
